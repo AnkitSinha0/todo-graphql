@@ -8,6 +8,13 @@ type Query {
   todos: [Todo]
 }
 
+  input AddTodoInput {
+    title: String!
+  }
+
 type Mutation {
-  addTodo(title: String!): Todo
+    addTodo(data: AddTodoInput): Todo
+    toggleTodo(id: ID!): Todo
+    deleteTodo(id: ID!): Boolean
+
 }
