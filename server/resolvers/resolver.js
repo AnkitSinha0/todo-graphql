@@ -1,4 +1,5 @@
 import Todo from "../models/todoModel.js";
+ 
 
 const resolvers = {
   Query: {
@@ -21,12 +22,14 @@ const resolvers = {
     return await todo.save();
   },
     deleteTodo: async (_, { id }) => {
-      const todo = await Todo.findByIdAndDelete(id);
-      if (!todo) {
-        throw new Error("Todo not found");
-      }
-      return todo;
-    }
+  const todo = await Todo.findByIdAndDelete(id);
+
+  if (!todo) {
+    throw new Error("Todo not found");
+  }
+  return true;
+}
+
   },
   
 };
