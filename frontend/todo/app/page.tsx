@@ -8,7 +8,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 
@@ -21,13 +21,14 @@ import {
 } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { Trash2 } from "lucide-react";
-import { useState ,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { title } from "process";
 const chain = Chain("http://localhost:5000/graphql");
 
 export default function Home() {
- const [todos, setTodos] = useState([]);
- const [title, setTitle] = useState("");
+  const [todos, setTodos] = useState([]);
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
 
   const loadTodos = async () => {
     const data = await chain("query")({
@@ -40,58 +41,51 @@ export default function Home() {
 
     setTodos(data.todos);
   };
-   useEffect(() => {
+  useEffect(() => {
     loadTodos();
   }, []);
   const toggleTodo = async (id: string) => {
-  await chain("mutation")({
-    toggleTodo: [
-      { id },            
-      {
-        id: true,
-        completed: true
-      }
-    ]
-  });
+    await chain("mutation")({
+      toggleTodo: [
+        { id },
+        {
+          id: true,
+          completed: true,
+        },
+      ],
+    });
 
-  loadTodos(); 
-};
+    loadTodos();
+  };
 
-const deleteTodo = async (id: string) => {
-  await chain("mutation")({
-    deleteTodo: [
-      { id },
-      true
-      
-    ]
-  });
+  const deleteTodo = async (id: string) => {
+    await chain("mutation")({
+      deleteTodo: [{ id }, true],
+    });
 
-  loadTodos(); // refresh list
-};
-const addTodo = async () => {
-  if (!title.trim()) return;
+    loadTodos();
+  };
+  const addTodo = async () => {
+    if (!title.trim()) return;
 
-  await chain("mutation")({
-    addTodo: [
-      { data: { title } },
-      {
-        id: true,
-        title: true,
-        completed: true
-      }
-    ]
-  });
+    await chain("mutation")({
+      addTodo: [
+        { data: { title } },
+        {
+          id: true,
+          title: true,
+          completed: true,
+        },
+      ],
+    });
 
-  setTitle("");
-  loadTodos(); // refresh list
-};
-
-
+    setTitle("");
+    setOpen(false);
+    loadTodos();
+  };
 
   return (
     <div className="min-h-screen bg-zinc-900 text-white p-6">
-
-      {/* Navbar */}
       <div className="flex justify-between items-center border border-zinc-700 rounded-lg px-6 py-3 mb-6">
         <h1 className="font-bold">Todo GQL</h1>
 
@@ -105,34 +99,30 @@ const addTodo = async () => {
       {/* Main Card */}
       <Card className="bg-zinc-900 border-zinc-700 text-white">
         <CardContent className="pt-6 text-white">
-
           {/* Create Button */}
-         <Dialog>
-  <DialogTrigger asChild>
-    <Button className="mb-4">
-      Create a new todo
-    </Button>
-  </DialogTrigger>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button className="mb-4">Create a new todo</Button>
+            </DialogTrigger>
 
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Create New Todo</DialogTitle>
-    </DialogHeader>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Todo</DialogTitle>
+              </DialogHeader>
 
-    <div className="space-y-4">
-      <Input
-        placeholder="Enter todo title..."
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-      />
+              <div className="space-y-4">
+                <Input
+                  placeholder="Enter todo title..."
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                />
 
-      <Button onClick={addTodo} className="w-full">
-        Add Todo
-      </Button>
-    </div>
-  </DialogContent>
-</Dialog>
-
+                <Button onClick={addTodo} className="w-full">
+                  Add Todo
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
 
           {/* Table */}
           <Table>
@@ -147,7 +137,14 @@ const addTodo = async () => {
 
             <TableBody>
               {todos.map((todo, index) => (
-                <TableRow key={todo.id}>
+                <TableRow
+                  key={todo.id}
+                  className={
+                    todo.completed
+                      ? "bg-green-900/40 hover:bg-green-900/60"
+                      : "bg-red-900/40 hover:bg-red-900/60"
+                  }
+                >
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{todo.title}</TableCell>
 
@@ -166,16 +163,12 @@ const addTodo = async () => {
                       onClick={() => deleteTodo(todo.id)}
                     />
                   </TableCell>
-
                 </TableRow>
               ))}
             </TableBody>
-
           </Table>
-
         </CardContent>
       </Card>
-
     </div>
   );
 }
